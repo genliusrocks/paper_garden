@@ -23,9 +23,15 @@ Given one arXiv URL, arXiv id, or local PDF path, Paper Garden:
 uv sync --extra dev
 ```
 
-## Skill Configuration
+## Configure
 
-Edit `skills/paper-garden/paper_garden.toml`:
+After installing the skill, initialize its config:
+
+```bash
+uv run python skills/paper-garden/scripts/configure.py --garden-dir "./paper_garden" --language "en"
+```
+
+If you omit either option, the script uses these defaults:
 
 ```toml
 garden_dir = "./paper_garden"
@@ -36,6 +42,7 @@ Notes:
 
 - `garden_dir` is resolved relative to the current working directory when the skill runs
 - `language` is passed through to the content-generation layer; file structure remains stable
+- if configuration is missing, Paper Garden refuses to run and points you to `configure.py`
 
 ## Example
 

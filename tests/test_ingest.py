@@ -2,6 +2,7 @@ from pathlib import Path
 
 from paper_garden.download import DownloadedPaper
 from paper_garden.extract import ExtractionResult
+from paper_garden.config import ConfigurationRequiredError
 from paper_garden.ingest import write_metadata
 
 
@@ -67,3 +68,21 @@ def test_main_runs_end_to_end_with_stubbed_dependencies(tmp_path: Path, monkeypa
     assert (garden_dir / "tags" / "arxiv.md").is_file()
     assert (garden_dir / "papers" / "2501.01234_test_title" / "wiki.md").is_file()
     assert (garden_dir / "papers" / "2501.01234_test_title" / "metadata.toml").is_file()
+
+
+def test_main_requires_configuration_before_running(tmp_path: Path, monkeypatch) -> None:
+    config_path = tmp_path / "paper_garden.toml"
+    config_path.write_text(
+        '# Run:\n# uv run python skills/paper-garden/scripts/configure.py --garden-dir "./paper_garden" --language "en"\n',
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(tmp_path)
+
+    from paper_garden.ingest import main
+
+    try:
+        main(["2501.01234", "--config", str(config_path)])
+    except ConfigurationRequiredError as exc:
+        assert "configure.py" in str(exc)
+    else:
+        raise AssertionError("Expected ConfigurationRequiredError")

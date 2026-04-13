@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from paper_garden.config import load_config
+from paper_garden.config import ConfigurationRequiredError, load_config
 
 
 def test_load_config_reads_skill_local_file(tmp_path: Path) -> None:
@@ -20,7 +20,7 @@ def test_load_config_rejects_missing_language(tmp_path: Path) -> None:
 
     try:
         load_config(config_path)
-    except ValueError as exc:
-        assert "language" in str(exc)
+    except ConfigurationRequiredError as exc:
+        assert "configure.py" in str(exc)
     else:
-        raise AssertionError("Expected ValueError")
+        raise AssertionError("Expected ConfigurationRequiredError")

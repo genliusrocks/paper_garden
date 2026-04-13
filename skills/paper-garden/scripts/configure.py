@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from _runtime import main
+from _configure import main
 
 
 if __name__ == "__main__":

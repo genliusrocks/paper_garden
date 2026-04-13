@@ -5,6 +5,10 @@ from pathlib import Path
 import tomllib
 
 
+class ConfigurationRequiredError(ValueError):
+    pass
+
+
 @dataclass(frozen=True)
 class PaperGardenConfig:
     garden_dir: Path
@@ -20,9 +24,15 @@ def load_config(config_path: Path) -> PaperGardenConfig:
     language = data.get("language")
 
     if not isinstance(garden_dir, str) or not garden_dir.strip():
-        raise ValueError("Config field 'garden_dir' must be a non-empty string")
+        raise ConfigurationRequiredError(
+            "Paper Garden is not configured. Run "
+            "`uv run python skills/paper-garden/scripts/configure.py --garden-dir ... --language ...`."
+        )
     if not isinstance(language, str) or not language.strip():
-        raise ValueError("Config field 'language' must be a non-empty string")
+        raise ConfigurationRequiredError(
+            "Paper Garden is not configured. Run "
+            "`uv run python skills/paper-garden/scripts/configure.py --garden-dir ... --language ...`."
+        )
 
     garden_dir_path = Path(garden_dir).expanduser()
     if not garden_dir_path.is_absolute():

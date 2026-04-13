@@ -1,2 +1,2 @@
-garden_dir = "./paper_garden"
-language = "en"
+# Run:
+# uv run python skills/paper-garden/scripts/configure.py --garden-dir "./paper_garden" --language "en"
