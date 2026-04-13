@@ -1,0 +1,19 @@
+# {{ title }}
+
+## Summary
+- ...
+
+## Problem
+- ...
+
+## Method
+- ...
+
+## Results
+- ...
+
+## Limitations
+- ...
+
+## Terms
+- ...
