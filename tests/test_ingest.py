@@ -13,7 +13,8 @@ def test_write_metadata_creates_metadata_file(tmp_path: Path) -> None:
         paper_dir=paper_dir,
         arxiv_id="2501.01234",
         title="Paper Title",
-        source_url="https://arxiv.org/abs/2501.01234",
+        source_ref="https://arxiv.org/abs/2501.01234",
+        source_kind="arxiv",
         language="en",
         tags=["rag"],
     )
@@ -21,6 +22,8 @@ def test_write_metadata_creates_metadata_file(tmp_path: Path) -> None:
     text = metadata_path.read_text(encoding="utf-8")
     assert 'arxiv_id = "2501.01234"' in text
     assert 'language = "en"' in text
+    assert 'source_kind = "arxiv"' in text
+    assert 'source_ref = "https://arxiv.org/abs/2501.01234"' in text
 
 
 def test_main_runs_end_to_end_with_stubbed_dependencies(tmp_path: Path, monkeypatch) -> None:
@@ -38,7 +41,8 @@ def test_main_runs_end_to_end_with_stubbed_dependencies(tmp_path: Path, monkeypa
             title="Test Title",
             paper_slug="2501.01234_test_title",
             pdf_path=pdf_path,
-            abs_url="https://arxiv.org/abs/2501.01234",
+            source_kind="arxiv",
+            source_ref="https://arxiv.org/abs/2501.01234",
         )
 
     def fake_run_marker(pdf_path: Path, paper_dir: Path) -> ExtractionResult:

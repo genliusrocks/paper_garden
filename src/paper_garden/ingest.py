@@ -17,23 +17,26 @@ from paper_garden.wiki import write_wiki
 
 def write_metadata(
     paper_dir: Path,
-    arxiv_id: str,
+    arxiv_id: str | None,
     title: str,
-    source_url: str,
+    source_ref: str,
+    source_kind: str,
     language: str,
     tags: list[str],
 ) -> Path:
+    data = {
+        "title": title,
+        "source_ref": source_ref,
+        "source_kind": source_kind,
+        "language": language,
+        "tags": tags,
+    }
+    if arxiv_id:
+        data["arxiv_id"] = arxiv_id
+
     metadata_path = paper_dir / "metadata.toml"
     metadata_path.write_text(
-        tomli_w.dumps(
-            {
-                "arxiv_id": arxiv_id,
-                "title": title,
-                "source_url": source_url,
-                "language": language,
-                "tags": tags,
-            }
-        ),
+        tomli_w.dumps(data),
         encoding="utf-8",
     )
     return metadata_path
@@ -65,8 +68,16 @@ def main(argv: list[str] | None = None) -> int:
             config.language,
         )
 
-    tags = ["arxiv"]
-    write_metadata(paper.pdf_path.parent, paper.arxiv_id, paper.title, paper.abs_url, config.language, tags)
+    tags = ["arxiv"] if paper.source_kind == "arxiv" else ["local-pdf"]
+    write_metadata(
+        paper.pdf_path.parent,
+        paper.arxiv_id,
+        paper.title,
+        paper.source_ref,
+        paper.source_kind,
+        config.language,
+        tags,
+    )
     paper_rel_dir = f"papers/{paper.paper_slug}"
     update_index(config.garden_dir / "index.md", paper.title, paper_rel_dir, tags)
     update_tag_files(config.garden_dir / "tags", paper.title, paper_rel_dir, tags)

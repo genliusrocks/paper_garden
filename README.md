@@ -1,12 +1,12 @@
 # Paper Garden
 
-Paper Garden is a Codex skill for ingesting a single arXiv paper into a Markdown-based knowledge garden.
+Paper Garden is a Codex skill and Claude Code command for ingesting papers into a Markdown-based knowledge garden.
 
 ## What It Does
 
-Given one arXiv URL or paper id, Paper Garden:
+Given one arXiv URL, arXiv id, or local PDF path, Paper Garden:
 
-- downloads the PDF
+- downloads or copies the PDF
 - extracts Markdown and JSON with `marker`
 - writes a reusable `wiki.md`
 - updates `index.md`
@@ -43,6 +43,10 @@ Notes:
 uv run python skills/paper-garden/scripts/run.py "https://arxiv.org/abs/2501.01234"
 ```
 
+```bash
+uv run python skills/paper-garden/scripts/run.py "/path/to/paper.pdf"
+```
+
 Expected output structure:
 
 ```text
@@ -57,9 +61,17 @@ paper_garden/
       wiki.md
       metadata.toml
   tags/
-    arxiv.md
+    <tag>.md
 ```
 
 ## Status
 
-Initial public release in progress.
+Current input support:
+
+- arXiv `abs` / `html` / `pdf` URLs
+- arXiv paper ids
+- local PDF files
+
+Planned later:
+
+- additional paper URLs beyond arXiv

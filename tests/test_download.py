@@ -1,4 +1,8 @@
-from paper_garden.download import build_pdf_url, canonical_arxiv_id, slugify_title
+from pathlib import Path
+
+import requests
+
+from paper_garden.download import build_pdf_url, canonical_arxiv_id, download_paper, slugify_title
 
 
 def test_canonical_arxiv_id_accepts_abs_url() -> None:
@@ -15,3 +19,16 @@ def test_build_pdf_url_uses_canonical_id() -> None:
 
 def test_slugify_title_is_filesystem_safe() -> None:
     assert slugify_title("A/B Testing: Paper Garden?") == "a_b_testing_paper_garden"
+
+
+def test_download_paper_copies_local_pdf(tmp_path: Path) -> None:
+    local_pdf = tmp_path / "My Paper.pdf"
+    local_pdf.write_bytes(b"%PDF-1.4")
+    papers_dir = tmp_path / "papers"
+
+    result = download_paper(requests.Session(), str(local_pdf), papers_dir)
+
+    assert result.source_kind == "local"
+    assert result.source_ref == str(local_pdf.resolve())
+    assert result.pdf_path.read_bytes() == b"%PDF-1.4"
+    assert result.pdf_path.parent.name.endswith("my_paper")
