@@ -12,6 +12,7 @@ if _repo_src.is_dir() and str(_repo_src) not in sys.path:
 
 from paper_garden.config import load_config
 from paper_garden.download import year_from_arxiv_id
+from paper_garden.ids import next_id
 from paper_garden.ingest import write_metadata
 from paper_garden.index import update_index
 from paper_garden.tags import update_tag_files
@@ -24,6 +25,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--title", required=True, help="Paper title.")
     parser.add_argument("--paper-slug", required=True, help="Filesystem-safe paper slug.")
     parser.add_argument("--tags", required=True, help="Comma-separated tags.")
+    parser.add_argument("--year", default=None, help="Publication year (YYYY). If omitted, derived from arxiv-id.")
     parser.add_argument("--arxiv-id", default=None, help="arXiv paper ID.")
     parser.add_argument("--source-ref", required=True, help="Source URL or path.")
     parser.add_argument("--source-kind", required=True, help="Source type: arxiv or local.")
@@ -37,6 +39,13 @@ def main(argv: list[str] | None = None) -> int:
     tags = [t.strip() for t in args.tags.split(",") if t.strip()]
     paper_dir = Path(args.paper_dir)
 
+    year = args.year or year_from_arxiv_id(args.arxiv_id)
+    if not year:
+        raise SystemExit("Publication year is required. Pass --year YYYY.")
+
+    index_path = config.garden_dir / "index.md"
+    paper_id = next_id(index_path, year)
+
     write_metadata(
         paper_dir=paper_dir,
         arxiv_id=args.arxiv_id,
@@ -45,14 +54,15 @@ def main(argv: list[str] | None = None) -> int:
         source_kind=args.source_kind,
         language=config.language,
         tags=tags,
+        paper_id=paper_id,
+        year=year,
     )
 
-    year = year_from_arxiv_id(args.arxiv_id)
     paper_rel_dir = f"papers/{args.paper_slug}"
-    update_index(config.garden_dir / "index.md", args.title, paper_rel_dir, tags, year=year, summary=args.summary)
-    update_tag_files(config.garden_dir / "tags", args.title, paper_rel_dir, tags, year=year, summary=args.summary)
+    update_index(index_path, paper_id=paper_id, title=args.title, paper_rel_dir=paper_rel_dir, tags=tags, summary=args.summary)
+    update_tag_files(config.garden_dir / "tags", paper_id=paper_id, title=args.title, paper_rel_dir=paper_rel_dir, tags=tags, summary=args.summary)
 
-    print(f"Updated metadata, index, and {len(tags)} tag file(s).")
+    print(f"Assigned {paper_id}. Updated metadata, index, and {len(tags)} tag file(s).")
     return 0
 
 
