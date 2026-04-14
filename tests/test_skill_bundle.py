@@ -26,3 +26,19 @@ def test_skill_md_references_two_step_workflow() -> None:
     assert "download.py" in skill_md
     assert "finalize.py" in skill_md
     assert "First-Time Setup" in skill_md
+
+
+def test_paper_read_scripts_import_from_package() -> None:
+    scripts_dir = Path("skills/paper-read/scripts")
+    assert scripts_dir.is_dir(), "skills/paper-read/scripts must exist"
+    for script in scripts_dir.glob("*.py"):
+        text = script.read_text(encoding="utf-8")
+        assert "from paper_garden" in text or script.name == "__init__.py", (
+            f"{script.name} does not import from paper_garden package"
+        )
+
+
+def test_paper_read_skill_md_references_locate_script() -> None:
+    skill_md = Path("skills/paper-read/SKILL.md").read_text(encoding="utf-8")
+    assert "locate.py" in skill_md
+    assert "$ARGUMENTS" in skill_md
