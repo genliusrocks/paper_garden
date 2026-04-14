@@ -1,14 +1,24 @@
 [project]
 name = "paper-garden"
 version = "0.1.0"
-description = "Codex skill for ingesting arXiv papers into a Markdown knowledge garden"
+description = "Claude Code and Codex skill for turning papers into a Markdown knowledge garden"
 readme = "README.md"
 requires-python = ">=3.12"
+license = "MIT"
+authors = [
+  { name = "wesley", email = "wesley@genlius.com" },
+]
+keywords = ["arxiv", "claude-code", "codex", "llm", "markdown", "research"]
 dependencies = [
   "beautifulsoup4>=4.12",
   "requests>=2.32",
   "tomli-w>=1.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/genliusrocks/paper_garden"
+Repository = "https://github.com/genliusrocks/paper_garden"
+Issues = "https://github.com/genliusrocks/paper_garden/issues"
 
 [project.optional-dependencies]
 dev = [
