@@ -1,40 +1,28 @@
 from __future__ import annotations
 
 from pathlib import Path
-import shutil
-import subprocess
-import sys
 
 
-def test_skill_scripts_do_not_depend_on_repo_src_path() -> None:
-    run_script = Path("skills/paper-garden/scripts/run.py").read_text(encoding="utf-8")
-    configure_script = Path("skills/paper-garden/scripts/configure.py").read_text(encoding="utf-8")
+def test_skill_scripts_import_from_package() -> None:
+    """Skill scripts should import from the paper_garden package, not duplicate code."""
+    scripts_dir = Path("skills/paper-garden/scripts")
+    for script in scripts_dir.glob("*.py"):
+        text = script.read_text(encoding="utf-8")
+        assert "from paper_garden" in text or script.name == "__init__.py", (
+            f"{script.name} does not import from paper_garden package"
+        )
 
-    assert ' / "src"' not in run_script
-    assert "parents[3]" not in run_script
-    assert ' / "src"' not in configure_script
-    assert "parents[3]" not in configure_script
+
+def test_no_duplicate_runtime_scripts() -> None:
+    """Ensure _runtime.py and _configure.py duplicates are gone."""
+    scripts_dir = Path("skills/paper-garden/scripts")
+    assert not (scripts_dir / "_runtime.py").exists()
+    assert not (scripts_dir / "_configure.py").exists()
 
 
-def test_installed_skill_scripts_run_from_copied_skill_dir(tmp_path: Path) -> None:
-    source_skill_dir = Path("skills/paper-garden").resolve()
-    installed_skill_dir = tmp_path / "paper-garden"
-    shutil.copytree(source_skill_dir, installed_skill_dir)
-
-    run_result = subprocess.run(
-        [sys.executable, str(installed_skill_dir / "scripts" / "run.py"), "--help"],
-        cwd=tmp_path,
-        capture_output=True,
-        text=True,
-    )
-    configure_result = subprocess.run(
-        [sys.executable, str(installed_skill_dir / "scripts" / "configure.py"), "--help"],
-        cwd=tmp_path,
-        capture_output=True,
-        text=True,
-    )
-
-    assert run_result.returncode == 0, run_result.stderr
-    assert "input_value" in run_result.stdout
-    assert configure_result.returncode == 0, configure_result.stderr
-    assert "--garden-dir" in configure_result.stdout
+def test_skill_md_references_two_step_workflow() -> None:
+    """SKILL.md should reference download.py and finalize.py for the two-step workflow."""
+    skill_md = Path("skills/paper-garden/SKILL.md").read_text(encoding="utf-8")
+    assert "download.py" in skill_md
+    assert "finalize.py" in skill_md
+    assert "First-Time Setup" in skill_md

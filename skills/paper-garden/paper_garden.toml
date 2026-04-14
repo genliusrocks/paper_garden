@@ -1,2 +1,3 @@
-# Run:
+# Not yet configured. The skill will prompt for garden_dir and language on first use.
+# To configure manually:
 # uv run python skills/paper-garden/scripts/configure.py --garden-dir "./paper_garden" --language "en"

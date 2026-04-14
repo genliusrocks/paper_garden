@@ -2,6 +2,8 @@
 
 Paper Garden is a Codex skill and Claude Code command for ingesting papers into a Markdown-based knowledge garden.
 
+It is designed for Claude/Codex agent workflows, not as a standalone CLI product.
+
 ## What It Does
 
 Given one arXiv URL, arXiv id, or local PDF path, Paper Garden:
@@ -23,13 +25,17 @@ Given one arXiv URL, arXiv id, or local PDF path, Paper Garden:
 uv sync --extra dev
 ```
 
+Then install the skill into Codex and use it from Claude/Codex sessions.
+
 ## Configure
 
-After installing the skill, initialize its config:
+After installing the skill, initialize its config once:
 
 ```bash
 uv run python skills/paper-garden/scripts/configure.py --garden-dir "./paper_garden" --language "en"
 ```
+
+This is an internal setup step for the installed skill, not a general-purpose runtime entrypoint.
 
 If you omit either option, the script uses these defaults:
 
@@ -44,15 +50,12 @@ Notes:
 - `language` is passed through to the content-generation layer; file structure remains stable
 - if configuration is missing, Paper Garden refuses to run and points you to `configure.py`
 
-## Example
+## Usage
 
-```bash
-uv run python skills/paper-garden/scripts/run.py "https://arxiv.org/abs/2501.01234"
-```
+Use the installed skill from Claude/Codex, for example:
 
-```bash
-uv run python skills/paper-garden/scripts/run.py "/path/to/paper.pdf"
-```
+- ingest this arXiv URL with `paper-garden`
+- ingest this local PDF with `paper-garden`
 
 Expected output structure:
 

@@ -50,6 +50,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=str(Path(__file__).resolve().parents[2] / "skills" / "paper-garden" / "paper_garden.toml"),
         help="Path to paper_garden.toml.",
     )
+    parser.add_argument(
+        "--tags",
+        default=None,
+        help="Comma-separated tags. If omitted, defaults to source-based tag.",
+    )
     return parser.parse_args(argv)
 
 
@@ -61,14 +66,21 @@ def main(argv: list[str] | None = None) -> int:
     with requests.Session() as session:
         paper = download_paper(session, args.input_value, config.garden_dir / "papers")
         extraction = run_marker(paper.pdf_path, paper.pdf_path.parent)
-        wiki_path = write_wiki(
+
+    wiki_path = paper.pdf_path.parent / "wiki.md"
+    if not wiki_path.exists():
+        write_wiki(
             paper.pdf_path.parent,
             paper.title,
             extraction.markdown_path.read_text(encoding="utf-8"),
             config.language,
         )
 
-    tags = ["arxiv"] if paper.source_kind == "arxiv" else ["local-pdf"]
+    if args.tags:
+        tags = [t.strip() for t in args.tags.split(",") if t.strip()]
+    else:
+        tags = ["arxiv"] if paper.source_kind == "arxiv" else ["local-pdf"]
+
     write_metadata(
         paper.pdf_path.parent,
         paper.arxiv_id,
@@ -82,5 +94,5 @@ def main(argv: list[str] | None = None) -> int:
     update_index(config.garden_dir / "index.md", paper.title, paper_rel_dir, tags)
     update_tag_files(config.garden_dir / "tags", paper.title, paper_rel_dir, tags)
 
-    print(wiki_path)
+    print(paper.pdf_path.parent)
     return 0
