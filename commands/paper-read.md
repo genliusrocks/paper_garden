@@ -1,8 +1,11 @@
-Read a paper from the knowledge garden by its ID and answer a question.
+Read one or more papers from the knowledge garden by their IDs and answer a question.
 
-`$ARGUMENTS` is `<paper_id> <question>`, for example: `pg-2024-00005 What kernel does the paper use?`
+`$ARGUMENTS` is `<paper_id> [<paper_id> ...] <question>`. Examples:
 
-Split `$ARGUMENTS` on the first whitespace: the first token is the paper ID, the rest is the question.
+- Single: `pg-2024-00005 What kernel does the paper use?`
+- Multiple: `pg-2024-00005 pg-2023-00008 Compare their assumptions about order flow.`
+
+Parse: split on whitespace; consume leading tokens matching `^pg-\d{4}-[0-9a-f]{5}$` as the paper ID list; the remainder joined with single spaces is the question. At least one ID is required.
 
 ## Repo and Config
 
@@ -10,34 +13,38 @@ Split `$ARGUMENTS` on the first whitespace: the first token is the paper ID, the
 - Config: `__PAPER_GARDEN_REPO__/skills/paper-garden/paper_garden.toml` (shared with `/paper-garden`)
 - All `uv run` commands must run from the repo root.
 
-## Step 1: Locate
+## Step 1: Locate (per ID)
+
+For **each** parsed ID:
 
 ```bash
 cd __PAPER_GARDEN_REPO__ && uv run python skills/paper-read/scripts/locate.py "<paper_id>" --config skills/paper-garden/paper_garden.toml
 ```
 
-- Non-zero exit → tell the user `paper id '<paper_id>' not found — check spelling or that ingest completed` and stop.
+- Non-zero exit → tell the user `paper id '<paper_id>' not found — check spelling or that ingest completed`. If some IDs resolved and others failed, report which failed and ask whether to proceed with the resolved subset or stop.
 - Success → save JSON fields `paper_dir`, `wiki_path`, `extracted_markdown`, `title`, `tags`, `year`.
 
-## Step 2: Read the wiki
+Keep resolved papers in a list, preserving user-given order.
 
-Read `wiki_path` in full. Mandatory and cheap.
+## Step 2: Read each wiki
+
+Read every resolved `wiki_path` in full. Mandatory and cheap.
 
 ## Step 3: Answer or escalate
 
-- Wiki answers the question → respond directly, citing wiki sections.
-- Wiki insufficient → read `extracted_markdown`. Use `grep` or section anchors to find relevant passages. Read only what you need.
-- `extracted_markdown` missing → tell the user extraction was skipped; offer to re-run `/paper-garden`.
+- Wikis answer the question → respond directly, citing sections and noting which paper each point came from.
+- Some wiki insufficient → read that paper's `extracted_markdown`. Use `grep` or section anchors. Read only what you need. Only escalate for papers that need it — do not read every paper's full text.
+- `extracted_markdown` missing → tell the user extraction was skipped for that paper; offer to re-run `/paper-garden`.
 
 ## Step 4: Optional wiki update (patch flow)
 
-If you notice a factual error or meaningful gap in the wiki relevant to the question:
+If you notice a factual error or meaningful gap in a paper's wiki relevant to the question:
 
-1. Identify the exact snippet in `wiki.md` that is wrong or incomplete.
-2. Draft a replacement snippet.
-3. Show the user the original and the replacement side by side and ask `Apply? (yes / edit / skip)`.
-4. On `yes`, apply with the `Edit` tool using the exact original as `old_string`. Do not rewrite the whole wiki. Do not auto-apply.
+1. Identify the exact snippet in that `wiki.md`.
+2. Draft a replacement.
+3. Show original and replacement side by side and ask `Apply? (yes / edit / skip)`.
+4. On `yes`, apply with the `Edit` tool using the exact original as `old_string`. Do not rewrite the whole wiki. Do not auto-apply. Confirm each paper's update separately — do not batch.
 
 ## Step 5: Report
 
-Summarize: paper title and ID, what was read (wiki only, or wiki + full-text sections), and any wiki updates applied with their path.
+For each paper, summarize: title and ID, what was read (wiki only, or wiki + full-text sections), and any wiki updates applied with their path.
