@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from paper_garden.ids import ID_RE, parse_existing_seqs
+from paper_garden.ids import ID_RE, next_id, parse_existing_seqs
 
 
 def test_id_re_matches_valid_index_line() -> None:
@@ -48,3 +48,38 @@ def test_parse_existing_seqs_ignores_malformed_lines(tmp_path: Path) -> None:
 
 def test_parse_existing_seqs_missing_file(tmp_path: Path) -> None:
     assert parse_existing_seqs(tmp_path / "nonexistent.md") == []
+
+
+def test_next_id_starts_at_00001_for_empty_index(tmp_path: Path) -> None:
+    index = tmp_path / "index.md"
+    index.write_text("# Paper Garden\n\n## Papers\n\n", encoding="utf-8")
+    assert next_id(index, "2024") == "pg-2024-00001"
+
+
+def test_next_id_increments_from_max(tmp_path: Path) -> None:
+    index = tmp_path / "index.md"
+    index.write_text(
+        "- `pg-2017-00001` [A](papers/a/wiki.md)\n"
+        "- `pg-2024-00005` [B](papers/b/wiki.md)\n"
+        "- `pg-2003-00003` [C](papers/c/wiki.md)\n",
+        encoding="utf-8",
+    )
+    assert next_id(index, "2025") == "pg-2025-00006"
+
+
+def test_next_id_uses_global_counter_not_per_year(tmp_path: Path) -> None:
+    index = tmp_path / "index.md"
+    index.write_text(
+        "- `pg-2024-0000a` [A](papers/a/wiki.md)\n",
+        encoding="utf-8",
+    )
+    assert next_id(index, "2024") == "pg-2024-0000b"
+
+
+def test_next_id_hex_padding(tmp_path: Path) -> None:
+    index = tmp_path / "index.md"
+    index.write_text(
+        "- `pg-2024-000ff` [A](papers/a/wiki.md)\n",
+        encoding="utf-8",
+    )
+    assert next_id(index, "2024") == "pg-2024-00100"

@@ -16,3 +16,9 @@ def parse_existing_seqs(index_path: Path) -> list[int]:
         if m:
             seqs.append(int(m.group(2), 16))
     return seqs
+
+
+def next_id(index_path: Path, year: str) -> str:
+    seqs = parse_existing_seqs(index_path)
+    next_seq = (max(seqs) if seqs else 0) + 1
+    return f"pg-{year}-{next_seq:05x}"
