@@ -4,48 +4,30 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](pyproject.toml)
 
-Turn academic papers into a searchable Markdown knowledge garden with Claude Code or Codex.
+A Claude Code command and Codex skill that turns academic papers into a searchable Markdown knowledge garden.
 
-Paper Garden is an agent-friendly workflow for ingesting arXiv papers and local PDFs into a plain-text research repository. Give your coding agent a paper link or file, and it downloads the source, extracts the text, drafts a structured wiki, suggests tags, and updates a browsable index after your review.
+Give your coding agent a paper link or local PDF. It downloads the source, extracts full text, drafts a structured wiki, suggests tags, and updates a browsable index — all after your review. The output is plain Markdown in a git repo, readable by both humans and LLM agents.
 
-It is built for people who want research notes to stay in git, stay readable, and stay useful to both humans and LLM agents.
+## Why
 
-## Why Paper Garden
-
-Reading papers is slow. Organizing them is slower. Paper Garden offloads the repetitive work, so you spend time understanding papers instead of filing them.
-
-The output is plain Markdown in a normal git repository. No proprietary database, no hosted app, no lock-in. Your garden works with any editor, any search tool, and any LLM that can read files.
-
-- Plain Markdown instead of a proprietary database
-- Git-friendly structure that works in your existing note repo
-- Human review before tags and index summaries are written
-- Agent-readable layout for Claude Code, Codex, and similar tools
-- Re-runnable ingestion workflow without turning your notes into a black box
-
-## Use Cases
-
-- Build a personal paper-reading garden that stays searchable in git
-- Maintain a shared lab or team repository of paper summaries
-- Preprocess papers into structured notes for downstream agent research
-- Keep extracted source text next to higher-level wiki notes for traceability
+- Plain Markdown in git — no database, no hosted app, no lock-in
+- Human reviews tags and summary before anything is written
+- Agent-readable layout that works as context for follow-up research
+- Duplicate detection prevents re-ingesting the same paper
 
 ## How It Works
 
 ```text
-You: "ingest https://arxiv.org/abs/1706.03762"
+You:    /paper-garden https://arxiv.org/abs/1706.03762
 
-Agent:  1. Downloads the PDF and extracts full text via marker
-        2. Generates a structured wiki (summary, method, results, limitations, terms)
-        3. Suggests tags: transformer, attention, sequence-modeling
-        4. Proposes a one-line summary for the index
+Agent:  1. Downloads PDF, extracts full text via marker
+        2. Generates structured wiki (summary, method, results, limitations, terms)
+        3. Suggests tags and a one-line index summary
 
-You:    Review the tags and summary, then confirm or adjust them
+You:    Review and confirm tags + summary
 
-Agent:  5. Writes wiki.md, updates index.md and tag files
-        6. Done - the paper is in your garden
+Agent:  4. Writes wiki.md, updates index.md and tag files
 ```
-
-Duplicate papers are detected before finalizing, so retrying an already-indexed paper is treated as a no-op instead of rewriting your garden.
 
 ## Example Output
 
@@ -102,14 +84,6 @@ your-garden/
 2. **Wiki** - structured analysis (summary, problem, method, results, limitations, terms). Updatable as understanding deepens.
 3. **Extracted full text** - complete Markdown and JSON from marker. Reference this when the wiki is not enough.
 
-## Design Principles
-
-- **Markdown over databases**: every artifact is inspectable, searchable, and versionable.
-- **Review before write**: the agent proposes tags and the index summary before finalizing.
-- **Stable top-level navigation**: index and tag summaries are short, deliberate, and treated as fixed once written.
-- **Layered paper storage**: index for discovery, wiki for understanding, extraction for raw detail.
-- **Agent-operable layout**: the repository structure is meant to be legible to both people and coding agents.
-
 ## Supported Inputs
 
 - arXiv URLs (`abs`, `html`, `pdf`)
@@ -118,52 +92,29 @@ your-garden/
 
 ## Install
 
-Clone the repo and sync dependencies:
-
 ```bash
 git clone https://github.com/genliusrocks/paper_garden.git
 cd paper_garden
-uv sync --extra dev
+uv sync
 ```
 
-### Claude Code
-
-The skill is auto-discovered when you work from the repo directory. On first use, Claude will ask you to configure your garden directory and wiki language.
-
-### Codex
-
-Point Codex at the `skills/paper-garden/` directory. The `SKILL.md` file contains the end-to-end workflow instructions.
-
-### Local CLI / development use
-
-You can also run the helper scripts directly:
+**Claude Code** — install as a global `/paper-garden` command:
 
 ```bash
-uv run python skills/paper-garden/scripts/configure.py --garden-dir "~/my-garden" --language "en"
-uv run python skills/paper-garden/scripts/download.py "https://arxiv.org/abs/1706.03762" --config skills/paper-garden/paper_garden.toml
+cp commands/paper-garden.md ~/.claude/commands/paper-garden.md
+sed -i "s|__PAPER_GARDEN_REPO__|$(pwd)|g" ~/.claude/commands/paper-garden.md
 ```
+
+**Codex** — register the `skills/paper-garden/` directory as a skill.
+
+On first use, the agent will ask you to configure your garden directory and wiki language.
 
 ## Configuration
-
-Configuration is created on first use. You can also set it manually:
-
-```bash
-uv run python skills/paper-garden/scripts/configure.py \
-  --garden-dir "~/my-garden" \
-  --language "en"
-```
 
 | Option | Default | Description |
 |--------|---------|-------------|
 | `garden_dir` | `./paper_garden` | Where the garden lives. Can be a separate git repo. |
 | `language` | `en` | Language for generated wiki content (for example `en` or `zh`). |
-
-## Non-goals
-
-- Not a reference manager or BibTeX replacement
-- Not a hosted web app or collaborative SaaS
-- Not a PDF annotation tool
-- Not a general-purpose note-taking framework outside paper ingestion
 
 ## Development
 
@@ -171,10 +122,6 @@ uv run python skills/paper-garden/scripts/configure.py \
 uv sync --extra dev
 uv run python -m pytest tests/ -v
 ```
-
-## Contributing
-
-Issues and pull requests are welcome. If you change ingest behavior, keep the user-facing workflow stable: configuration should remain explicit, duplicate checks should be non-destructive, and generated artifacts should stay plain Markdown.
 
 ## Requirements
 
