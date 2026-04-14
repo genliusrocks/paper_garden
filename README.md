@@ -102,7 +102,8 @@ uv sync
 
 ```bash
 cp commands/paper-garden.md ~/.claude/commands/paper-garden.md
-sed -i "s|__PAPER_GARDEN_REPO__|$(pwd)|g" ~/.claude/commands/paper-garden.md
+cp commands/paper-read.md ~/.claude/commands/paper-read.md
+sed -i "s|__PAPER_GARDEN_REPO__|$(pwd)|g" ~/.claude/commands/paper-garden.md ~/.claude/commands/paper-read.md
 ```
 
 **Codex** — register the `skills/paper-garden/` directory as a skill.
