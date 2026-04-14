@@ -46,3 +46,28 @@ def test_locate_finds_paper_via_index(tmp_path: Path) -> None:
 def test_locate_returns_none_when_not_found(tmp_path: Path) -> None:
     garden = _make_garden(tmp_path)
     assert locate(garden, "pg-2024-99999") is None
+
+
+def test_locate_falls_back_to_metadata_when_index_missing_id(tmp_path: Path) -> None:
+    garden = _make_garden(tmp_path)
+    # Simulate index drift: overwrite index.md without the ID line
+    (garden / "index.md").write_text(
+        "# Paper Garden\n\n## Papers\n\n", encoding="utf-8"
+    )
+    result = locate(garden, "pg-2024-00001")
+    assert result is not None
+    assert result.paper_id == "pg-2024-00001"
+    assert result.paper_dir == garden / "papers" / "2408.03594_sample"
+    assert result.title == "Sample Paper"
+
+
+def test_locate_returns_none_when_metadata_missing_id_field(tmp_path: Path) -> None:
+    garden = _make_garden(tmp_path)
+    (garden / "index.md").write_text("# Paper Garden\n\n", encoding="utf-8")
+    # Overwrite metadata.toml without id field
+    import tomli_w
+    (garden / "papers" / "2408.03594_sample" / "metadata.toml").write_text(
+        tomli_w.dumps({"title": "Sample Paper", "tags": [], "year": "2024"}),
+        encoding="utf-8",
+    )
+    assert locate(garden, "pg-2024-00001") is None

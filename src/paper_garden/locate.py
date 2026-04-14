@@ -66,5 +66,22 @@ def _locate_via_index(garden_dir: Path, paper_id: str) -> LocatedPaper | None:
     return None
 
 
+def _locate_via_metadata(garden_dir: Path, paper_id: str) -> LocatedPaper | None:
+    papers_dir = garden_dir / "papers"
+    if not papers_dir.is_dir():
+        return None
+    for meta_path in papers_dir.glob("*/metadata.toml"):
+        try:
+            meta = tomllib.loads(meta_path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if meta.get("id") == paper_id:
+            return _build_located(paper_id, meta_path.parent, meta)
+    return None
+
+
 def locate(garden_dir: Path, paper_id: str) -> LocatedPaper | None:
-    return _locate_via_index(garden_dir, paper_id)
+    result = _locate_via_index(garden_dir, paper_id)
+    if result is not None:
+        return result
+    return _locate_via_metadata(garden_dir, paper_id)
