@@ -80,38 +80,61 @@ def fetch_title(session: requests.Session, arxiv_id: str) -> str:
     return text or arxiv_id
 
 
-def download_paper(session: requests.Session, input_value: str, papers_dir: Path) -> DownloadedPaper:
+@dataclass(frozen=True)
+class ResolvedPaper:
+    """Metadata resolved before downloading the PDF."""
+    arxiv_id: str | None
+    title: str
+    paper_slug: str
+    source_kind: str
+    source_ref: str
+
+
+def resolve_paper(session: requests.Session | None, input_value: str) -> ResolvedPaper:
+    """Resolve paper metadata (title, slug, source) without downloading the PDF."""
     if is_local_pdf(input_value):
         source_path = Path(input_value).expanduser().resolve()
         title = source_path.stem
-        paper_slug = slugify_title(title)
-        paper_dir = papers_dir / paper_slug
-        paper_dir.mkdir(parents=True, exist_ok=True)
-        pdf_path = paper_dir / "paper.pdf"
-        shutil.copyfile(source_path, pdf_path)
-        return DownloadedPaper(
+        return ResolvedPaper(
             arxiv_id=None,
             title=title,
-            paper_slug=paper_slug,
-            pdf_path=pdf_path,
+            paper_slug=slugify_title(title),
             source_kind="local",
             source_ref=str(source_path),
         )
 
     arxiv_id = canonical_arxiv_id(input_value)
+    if session is None:
+        raise ValueError("requests.Session required for arXiv downloads")
     title = fetch_title(session, arxiv_id)
-    paper_slug = f"{arxiv_id.replace('/', '_')}_{slugify_title(title)}"
-    paper_dir = papers_dir / paper_slug
-    paper_dir.mkdir(parents=True, exist_ok=True)
-    pdf_path = paper_dir / "paper.pdf"
-    response = session.get(build_pdf_url(arxiv_id), timeout=30)
-    response.raise_for_status()
-    pdf_path.write_bytes(response.content)
-    return DownloadedPaper(
+    return ResolvedPaper(
         arxiv_id=arxiv_id,
         title=title,
-        paper_slug=paper_slug,
-        pdf_path=pdf_path,
+        paper_slug=f"{arxiv_id.replace('/', '_')}_{slugify_title(title)}",
         source_kind="arxiv",
         source_ref=f"https://arxiv.org/abs/{arxiv_id}",
+    )
+
+
+def download_paper(session: requests.Session, input_value: str, papers_dir: Path) -> DownloadedPaper:
+    resolved = resolve_paper(session, input_value)
+    paper_dir = papers_dir / resolved.paper_slug
+    paper_dir.mkdir(parents=True, exist_ok=True)
+    pdf_path = paper_dir / "paper.pdf"
+
+    if resolved.source_kind == "local":
+        source_path = Path(resolved.source_ref)
+        shutil.copyfile(source_path, pdf_path)
+    else:
+        response = session.get(build_pdf_url(resolved.arxiv_id), timeout=30)
+        response.raise_for_status()
+        pdf_path.write_bytes(response.content)
+
+    return DownloadedPaper(
+        arxiv_id=resolved.arxiv_id,
+        title=resolved.title,
+        paper_slug=resolved.paper_slug,
+        pdf_path=pdf_path,
+        source_kind=resolved.source_kind,
+        source_ref=resolved.source_ref,
     )

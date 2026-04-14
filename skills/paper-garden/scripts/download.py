@@ -12,7 +12,8 @@ if _repo_src.is_dir() and str(_repo_src) not in sys.path:
     sys.path.insert(0, str(_repo_src))
 
 from paper_garden.config import load_config
-from paper_garden.download import download_paper
+from paper_garden.dedup import check_duplicate
+from paper_garden.download import download_paper, resolve_paper
 from paper_garden.extract import run_marker
 from paper_garden.init import ensure_garden
 
@@ -32,11 +33,27 @@ def main(argv: list[str] | None = None) -> int:
     ensure_garden(config.garden_dir, language=config.language)
 
     with requests.Session() as session:
+        # Resolve title before downloading to check for duplicates first
+        resolved = resolve_paper(session, args.input_value)
+
+        dup = check_duplicate(config.garden_dir / "index.md", resolved.title)
+        if dup.found:
+            result = {
+                "duplicate": True,
+                "title": resolved.title,
+                "existing_entry": dup.existing_entry,
+                "existing_paper_dir": str(config.garden_dir / dup.existing_paper_dir) if dup.existing_paper_dir else None,
+                "garden_dir": str(config.garden_dir),
+            }
+            print(json.dumps(result, indent=2))
+            return 0
+
         paper = download_paper(session, args.input_value, config.garden_dir / "papers")
 
     extraction = run_marker(paper.pdf_path, paper.pdf_path.parent)
 
     result = {
+        "duplicate": False,
         "paper_dir": str(paper.pdf_path.parent),
         "paper_slug": paper.paper_slug,
         "title": paper.title,

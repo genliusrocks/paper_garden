@@ -51,7 +51,17 @@ uv run python skills/paper-garden/scripts/download.py "<input>" --config skills/
 
 Where `<input>` is an arXiv abs/html/pdf URL, arXiv paper ID, or local PDF path.
 
-The script outputs JSON. Save all fields — you need them for later steps:
+The script outputs JSON. Check the `duplicate` field first:
+
+**If `"duplicate": true`:**
+The paper already exists in the garden. Tell the user:
+- The paper title
+- The existing entry from index.md
+- The path to the existing paper directory and wiki
+- **Stop here. Do NOT proceed to Step 2.**
+
+**If `"duplicate": false`:**
+Save all fields — you need them for later steps:
 - `paper_dir`, `paper_slug`, `title`, `arxiv_id`, `source_kind`, `source_ref`
 - `extracted_markdown` — path to the extracted markdown file
 - `garden_dir`, `language`
