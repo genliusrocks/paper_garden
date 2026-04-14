@@ -60,6 +60,8 @@ def main(argv: list[str] | None = None) -> int:
         "arxiv_id": paper.arxiv_id,
         "source_kind": paper.source_kind,
         "source_ref": paper.source_ref,
+        "year": resolved.year,
+        "needs_year": resolved.year is None,
         "extracted_markdown": str(extraction.markdown_path),
         "extracted_json": str(extraction.json_path),
         "garden_dir": str(config.garden_dir),
