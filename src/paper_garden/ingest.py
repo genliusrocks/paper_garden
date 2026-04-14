@@ -23,8 +23,12 @@ def write_metadata(
     source_kind: str,
     language: str,
     tags: list[str],
+    paper_id: str,
+    year: str,
 ) -> Path:
     data = {
+        "id": paper_id,
+        "year": year,
         "title": title,
         "source_ref": source_ref,
         "source_kind": source_kind,
@@ -55,6 +59,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=None,
         help="Comma-separated tags. If omitted, defaults to source-based tag.",
     )
+    parser.add_argument(
+        "--year",
+        default=None,
+        help="Publication year (required if not derivable from arXiv ID).",
+    )
     return parser.parse_args(argv)
 
 
@@ -81,19 +90,29 @@ def main(argv: list[str] | None = None) -> int:
     else:
         tags = ["arxiv"] if paper.source_kind == "arxiv" else ["local-pdf"]
 
+    year = args.year or year_from_arxiv_id(paper.arxiv_id)
+    if not year:
+        raise SystemExit("Publication year could not be inferred. Pass --year YYYY.")
+
+    from paper_garden.ids import next_id
+
+    index_path = config.garden_dir / "index.md"
+    paper_id = next_id(index_path, year)
+
     write_metadata(
-        paper.pdf_path.parent,
-        paper.arxiv_id,
-        paper.title,
-        paper.source_ref,
-        paper.source_kind,
-        config.language,
-        tags,
+        paper_dir=paper.pdf_path.parent,
+        arxiv_id=paper.arxiv_id,
+        title=paper.title,
+        source_ref=paper.source_ref,
+        source_kind=paper.source_kind,
+        language=config.language,
+        tags=tags,
+        paper_id=paper_id,
+        year=year,
     )
-    year = year_from_arxiv_id(paper.arxiv_id)
     paper_rel_dir = f"papers/{paper.paper_slug}"
-    update_index(config.garden_dir / "index.md", paper.title, paper_rel_dir, tags, year=year)
-    update_tag_files(config.garden_dir / "tags", paper.title, paper_rel_dir, tags, year=year)
+    update_index(index_path, paper_id=paper_id, title=paper.title, paper_rel_dir=paper_rel_dir, tags=tags)
+    update_tag_files(config.garden_dir / "tags", paper_id=paper_id, title=paper.title, paper_rel_dir=paper_rel_dir, tags=tags)
 
     print(paper.pdf_path.parent)
     return 0

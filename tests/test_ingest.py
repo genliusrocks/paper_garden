@@ -18,9 +18,13 @@ def test_write_metadata_creates_metadata_file(tmp_path: Path) -> None:
         source_kind="arxiv",
         language="en",
         tags=["rag"],
+        paper_id="pg-2025-00001",
+        year="2025",
     )
 
     text = metadata_path.read_text(encoding="utf-8")
+    assert 'id = "pg-2025-00001"' in text
+    assert 'year = "2025"' in text
     assert 'arxiv_id = "2501.01234"' in text
     assert 'language = "en"' in text
     assert 'source_kind = "arxiv"' in text
