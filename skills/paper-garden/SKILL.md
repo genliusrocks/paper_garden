@@ -63,8 +63,13 @@ The paper already exists in the garden. Tell the user:
 **If `"duplicate": false`:**
 Save all fields — you need them for later steps:
 - `paper_dir`, `paper_slug`, `title`, `arxiv_id`, `source_kind`, `source_ref`
+- `year`, `needs_year`
 - `extracted_markdown` — path to the extracted markdown file
 - `garden_dir`, `language`
+
+**If `"needs_year": true`** (local PDF, or year not derivable from arXiv ID):
+Ask the user: "What year was this paper published? (YYYY)"
+Save the answer and pass it to `finalize.py` as `--year`.
 
 ### Step 2: Generate Wiki
 
@@ -120,17 +125,22 @@ uv run python skills/paper-garden/scripts/finalize.py \
   --paper-slug "<paper_slug>" \
   --tags "<tag1,tag2,tag3>" \
   --summary "<one-line summary>" \
+  --year "<YYYY>" \
   --source-ref "<source_ref>" \
   --source-kind "<source_kind>" \
   --arxiv-id "<arxiv_id>"
 ```
 
-Omit `--arxiv-id` if the source is a local PDF.
+- Omit `--arxiv-id` if the source is a local PDF.
+- `--year` is required when source is local PDF. For arXiv sources, it can be omitted and will be derived from the arXiv ID.
+
+The script prints the assigned paper ID (`pg-<year>-<hex5>`).
 
 ### Step 5: Report
 
 Tell the user:
 - Paper directory path
 - Wiki file path
+- Assigned paper ID (from `finalize.py` output)
 - Final confirmed tags
 - Which index and tag files were updated

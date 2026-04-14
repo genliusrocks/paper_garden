@@ -30,7 +30,8 @@ cd __PAPER_GARDEN_REPO__ && uv run python skills/paper-garden/scripts/download.p
 The script outputs JSON. Check `duplicate` first:
 
 - **`"duplicate": true`**: Tell the user the title, existing entry, and existing path. Stop here.
-- **`"duplicate": false`**: Save all fields (`paper_dir`, `paper_slug`, `title`, `arxiv_id`, `source_kind`, `source_ref`, `extracted_markdown`, `garden_dir`, `language`) for later steps.
+- **`"duplicate": false`**: Save all fields (`paper_dir`, `paper_slug`, `title`, `arxiv_id`, `source_kind`, `source_ref`, `year`, `needs_year`, `extracted_markdown`, `garden_dir`, `language`) for later steps.
+- **If `"needs_year": true`** (local PDF or year not derivable): Ask the user "What year was this paper published? (YYYY)" and save the answer for `--year` in Step 4.
 
 ## Step 2: Generate Wiki
 
@@ -54,13 +55,17 @@ cd __PAPER_GARDEN_REPO__ && uv run python skills/paper-garden/scripts/finalize.p
   --paper-slug "<paper_slug>" \
   --tags "<tag1,tag2,tag3>" \
   --summary "<one-line summary>" \
+  --year "<YYYY>" \
   --source-ref "<source_ref>" \
   --source-kind "<source_kind>" \
   --arxiv-id "<arxiv_id>"
 ```
 
-Omit `--arxiv-id` if the source is a local PDF.
+- Omit `--arxiv-id` if the source is a local PDF.
+- `--year` is required for local PDFs; for arXiv it can be omitted (derived from arXiv ID).
+
+The script prints the assigned paper ID (`pg-<year>-<hex5>`).
 
 ## Step 5: Report
 
-Tell the user: paper directory, wiki path, final tags, updated index and tag files.
+Tell the user: paper directory, wiki path, assigned paper ID, final tags, updated index and tag files.
