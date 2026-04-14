@@ -11,6 +11,7 @@ if _repo_src.is_dir() and str(_repo_src) not in sys.path:
     sys.path.insert(0, str(_repo_src))
 
 from paper_garden.config import load_config
+from paper_garden.download import year_from_arxiv_id
 from paper_garden.ingest import write_metadata
 from paper_garden.index import update_index
 from paper_garden.tags import update_tag_files
@@ -26,6 +27,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--arxiv-id", default=None, help="arXiv paper ID.")
     parser.add_argument("--source-ref", required=True, help="Source URL or path.")
     parser.add_argument("--source-kind", required=True, help="Source type: arxiv or local.")
+    parser.add_argument("--summary", default=None, help="One-line summary (max 100 chars).")
     return parser.parse_args(argv)
 
 
@@ -45,9 +47,10 @@ def main(argv: list[str] | None = None) -> int:
         tags=tags,
     )
 
+    year = year_from_arxiv_id(args.arxiv_id)
     paper_rel_dir = f"papers/{args.paper_slug}"
-    update_index(config.garden_dir / "index.md", args.title, paper_rel_dir, tags)
-    update_tag_files(config.garden_dir / "tags", args.title, paper_rel_dir, tags)
+    update_index(config.garden_dir / "index.md", args.title, paper_rel_dir, tags, year=year, summary=args.summary)
+    update_tag_files(config.garden_dir / "tags", args.title, paper_rel_dir, tags, year=year, summary=args.summary)
 
     print(f"Updated metadata, index, and {len(tags)} tag file(s).")
     return 0

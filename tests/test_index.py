@@ -11,3 +11,35 @@ def test_update_index_adds_single_entry(tmp_path: Path) -> None:
 
     text = index_path.read_text(encoding="utf-8")
     assert "- [Paper Title](papers/paper-slug/wiki.md) | tags: rag, agents" in text
+
+
+def test_update_index_includes_year(tmp_path: Path) -> None:
+    index_path = tmp_path / "index.md"
+    index_path.write_text("# Paper Garden\n\n## Papers\n\n", encoding="utf-8")
+
+    update_index(index_path, "Paper Title", "papers/paper-slug", ["rag"], year="2017")
+
+    text = index_path.read_text(encoding="utf-8")
+    assert "- (2017) [Paper Title](papers/paper-slug/wiki.md) | tags: rag" in text
+
+
+def test_update_index_includes_summary(tmp_path: Path) -> None:
+    index_path = tmp_path / "index.md"
+    index_path.write_text("# Paper Garden\n\n## Papers\n\n", encoding="utf-8")
+
+    update_index(index_path, "Paper Title", "papers/paper-slug", ["rag"], year="2017", summary="A short summary")
+
+    text = index_path.read_text(encoding="utf-8")
+    assert "- (2017) [Paper Title](papers/paper-slug/wiki.md) | tags: rag — A short summary" in text
+
+
+def test_update_index_preserves_summary_when_not_provided(tmp_path: Path) -> None:
+    index_path = tmp_path / "index.md"
+    index_path.write_text("# Paper Garden\n\n## Papers\n\n", encoding="utf-8")
+
+    update_index(index_path, "Paper Title", "papers/paper-slug", ["rag"], year="2017", summary="Original summary")
+    update_index(index_path, "Paper Title", "papers/paper-slug", ["rag", "llm"], year="2017")
+
+    text = index_path.read_text(encoding="utf-8")
+    assert "— Original summary" in text
+    assert "tags: rag, llm" in text

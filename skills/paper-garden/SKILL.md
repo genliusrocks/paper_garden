@@ -86,20 +86,21 @@ Key terminology defined or used in the paper.
 
 Write in the language specified by `language` from Step 1. Use the Write tool to create the file.
 
-### Step 3: Suggest and Confirm Tags
+### Step 3: Suggest Tags, Summary, and Confirm
 
 1. Based on the paper content, suggest **3-7 tags**. Guidelines:
    - Lowercase, hyphenated (e.g., `retrieval-augmented-generation`, `transformer`)
    - Mix of topic tags (e.g., `large-language-model`, `computer-vision`) and method tags (e.g., `fine-tuning`, `distillation`)
    - Check `<garden_dir>/tags/` for existing tag files — reuse existing tags when the paper fits
-2. Present suggested tags to the user.
-3. Wait for the user to confirm, add, remove, or rename tags.
+2. Write a **one-line summary** of the paper (max 100 characters), in the configured language. This summary appears in index.md and tag files alongside the paper link. **The summary is immutable once written — it will never be modified after ingest.** Take extra care to make it accurate and capture the paper's core contribution.
+3. Present suggested tags and summary to the user.
+4. Wait for the user to confirm, add, remove, or rename tags, and approve the summary.
 
-**Do NOT proceed until the user confirms the final tag list.**
+**Do NOT proceed until the user confirms the final tag list and summary.**
 
 ### Step 4: Finalize
 
-Run with the confirmed tags:
+Run with the confirmed tags and summary:
 
 ```bash
 uv run python skills/paper-garden/scripts/finalize.py \
@@ -108,6 +109,7 @@ uv run python skills/paper-garden/scripts/finalize.py \
   --title "<title>" \
   --paper-slug "<paper_slug>" \
   --tags "<tag1,tag2,tag3>" \
+  --summary "<one-line summary>" \
   --source-ref "<source_ref>" \
   --source-kind "<source_kind>" \
   --arxiv-id "<arxiv_id>"

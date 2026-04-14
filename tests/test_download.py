@@ -2,7 +2,7 @@ from pathlib import Path
 
 import requests
 
-from paper_garden.download import build_pdf_url, canonical_arxiv_id, download_paper, slugify_title
+from paper_garden.download import build_pdf_url, canonical_arxiv_id, download_paper, slugify_title, year_from_arxiv_id
 
 
 def test_canonical_arxiv_id_accepts_abs_url() -> None:
@@ -32,3 +32,10 @@ def test_download_paper_copies_local_pdf(tmp_path: Path) -> None:
     assert result.source_ref == str(local_pdf.resolve())
     assert result.pdf_path.read_bytes() == b"%PDF-1.4"
     assert result.pdf_path.parent.name.endswith("my_paper")
+
+
+def test_year_from_arxiv_id() -> None:
+    assert year_from_arxiv_id("1706.03762") == "2017"
+    assert year_from_arxiv_id("2501.01234") == "2025"
+    assert year_from_arxiv_id(None) is None
+    assert year_from_arxiv_id("hep-ph/9905221") is None

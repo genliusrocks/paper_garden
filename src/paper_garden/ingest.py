@@ -7,7 +7,7 @@ import requests
 import tomli_w
 
 from paper_garden.config import load_config
-from paper_garden.download import download_paper
+from paper_garden.download import download_paper, year_from_arxiv_id
 from paper_garden.extract import run_marker
 from paper_garden.index import update_index
 from paper_garden.init import ensure_garden
@@ -61,7 +61,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     config = load_config(Path(args.config))
-    ensure_garden(config.garden_dir)
+    ensure_garden(config.garden_dir, language=config.language)
 
     with requests.Session() as session:
         paper = download_paper(session, args.input_value, config.garden_dir / "papers")
@@ -90,9 +90,10 @@ def main(argv: list[str] | None = None) -> int:
         config.language,
         tags,
     )
+    year = year_from_arxiv_id(paper.arxiv_id)
     paper_rel_dir = f"papers/{paper.paper_slug}"
-    update_index(config.garden_dir / "index.md", paper.title, paper_rel_dir, tags)
-    update_tag_files(config.garden_dir / "tags", paper.title, paper_rel_dir, tags)
+    update_index(config.garden_dir / "index.md", paper.title, paper_rel_dir, tags, year=year)
+    update_tag_files(config.garden_dir / "tags", paper.title, paper_rel_dir, tags, year=year)
 
     print(paper.pdf_path.parent)
     return 0

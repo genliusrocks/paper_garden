@@ -29,7 +29,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     config = load_config(Path(args.config))
-    ensure_garden(config.garden_dir)
+    ensure_garden(config.garden_dir, language=config.language)
 
     with requests.Session() as session:
         paper = download_paper(session, args.input_value, config.garden_dir / "papers")

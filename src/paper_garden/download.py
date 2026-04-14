@@ -11,6 +11,17 @@ from bs4 import BeautifulSoup
 
 
 SAFE_RE = re.compile(r"[^a-z0-9]+")
+ARXIV_YYMM_RE = re.compile(r"^(\d{2})(\d{2})\.")
+
+
+def year_from_arxiv_id(arxiv_id: str | None) -> str | None:
+    if not arxiv_id:
+        return None
+    m = ARXIV_YYMM_RE.match(arxiv_id)
+    if not m:
+        return None
+    yy = int(m.group(1))
+    return str(2000 + yy) if yy < 100 else None
 
 
 @dataclass(frozen=True)
