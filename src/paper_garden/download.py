@@ -88,10 +88,11 @@ class ResolvedPaper:
     paper_slug: str
     source_kind: str
     source_ref: str
+    year: str | None
 
 
 def resolve_paper(session: requests.Session | None, input_value: str) -> ResolvedPaper:
-    """Resolve paper metadata (title, slug, source) without downloading the PDF."""
+    """Resolve paper metadata (title, slug, source, year) without downloading the PDF."""
     if is_local_pdf(input_value):
         source_path = Path(input_value).expanduser().resolve()
         title = source_path.stem
@@ -101,6 +102,7 @@ def resolve_paper(session: requests.Session | None, input_value: str) -> Resolve
             paper_slug=slugify_title(title),
             source_kind="local",
             source_ref=str(source_path),
+            year=None,
         )
 
     arxiv_id = canonical_arxiv_id(input_value)
@@ -113,6 +115,7 @@ def resolve_paper(session: requests.Session | None, input_value: str) -> Resolve
         paper_slug=f"{arxiv_id.replace('/', '_')}_{slugify_title(title)}",
         source_kind="arxiv",
         source_ref=f"https://arxiv.org/abs/{arxiv_id}",
+        year=year_from_arxiv_id(arxiv_id),
     )
 
 

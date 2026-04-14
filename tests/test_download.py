@@ -39,3 +39,27 @@ def test_year_from_arxiv_id() -> None:
     assert year_from_arxiv_id("2501.01234") == "2025"
     assert year_from_arxiv_id(None) is None
     assert year_from_arxiv_id("hep-ph/9905221") is None
+
+
+def test_resolved_paper_has_year_for_arxiv() -> None:
+    from paper_garden.download import resolve_paper
+
+    class FakeSession:
+        def get(self, url, timeout):
+            class R:
+                text = '<h1 class="title">Title: Sample Paper</h1>'
+                def raise_for_status(self): pass
+            return R()
+
+    resolved = resolve_paper(FakeSession(), "2408.03594")
+    assert resolved.year == "2024"
+
+
+def test_resolved_paper_year_none_for_local_pdf(tmp_path: Path) -> None:
+    from paper_garden.download import resolve_paper
+
+    pdf = tmp_path / "sample.pdf"
+    pdf.write_bytes(b"%PDF-1.4\n%EOF\n")
+
+    resolved = resolve_paper(None, str(pdf))
+    assert resolved.year is None
